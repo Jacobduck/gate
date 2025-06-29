@@ -175,7 +175,7 @@ export default function HomePage() {
 
       {/* Category Tabs - Only for Menu */}
       {activeTab === 'menu' && (
-        <div className="fixed top-16 left-0 w-full bg-white/90 backdrop-blur-sm border-b border-slate-200 z-40">
+        <div className="fixed top-14 left-0 w-full bg-white/90 backdrop-blur-sm border-b border-slate-200 z-40">
           <div className="flex justify-center px-4 py-3">
             {(['starters', 'meals', 'desserts'] as MenuItem['category'][]).map(cat => (
               <button
@@ -195,7 +195,7 @@ export default function HomePage() {
       )}
 
       {/* Content */}
-      <div className="pt-32 px-4 pb-24">
+      <div className={`px-4 pb-24 ${activeTab === 'menu' ? 'pt-32' : 'pt-20'}`}>
         {activeTab === 'menu' && (
           <div className="space-y-3">
             {categorizedMenu[menuCategory].map(item => (
