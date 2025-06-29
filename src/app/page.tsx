@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 // Define the MenuItem and CartItem types
 interface MenuItem {
@@ -54,6 +55,27 @@ const categorizedMenu: Record<MenuItem['category'], MenuItem[]> = {
   ],
 };
 
+const categoryColors = {
+  starters: {
+    gradient: 'from-orange-400 to-red-500',
+    toast: 'linear-gradient(135deg, #fb923c 0%, #ef4444 100%)',
+    price: 'from-orange-400 to-red-500',
+    button: 'from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600'
+  },
+  meals: {
+    gradient: 'from-blue-500 to-purple-600',
+    toast: 'linear-gradient(135deg, #3b82f6 0%, #9333ea 100%)',
+    price: 'from-blue-500 to-purple-600',
+    button: 'from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
+  },
+  desserts: {
+    gradient: 'from-pink-400 to-rose-500',
+    toast: 'linear-gradient(135deg, #f472b6 0%, #f43f5e 100%)',
+    price: 'from-pink-400 to-rose-500',
+    button: 'from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600'
+  },
+};
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'menu' | 'order'>('menu');
   const [menuCategory, setMenuCategory] = useState<MenuItem['category']>('starters');
@@ -70,122 +92,222 @@ export default function HomePage() {
       }
       return [...prev, { ...item, quantity: 1 }];
     });
+    toast.success(`${item.name} added to cart`, {
+      description: `$${item.price.toFixed(2)}`,
+      style: {
+        background: categoryColors[item.category].toast,
+        color: 'white',
+        border: 'none',
+        borderRadius: '12px',
+      },
+    });
   };
 
   // Change item quantity or remove when zero
   const changeQuantity = (itemId: string, delta: number) => {
-    setCart(prev =>
-      prev
+    setCart(prev => {
+      const updated = prev
         .map(i =>
           i.id === itemId ? { ...i, quantity: i.quantity + delta } : i
         )
-        .filter(i => i.quantity > 0)
-    );
+        .filter(i => i.quantity > 0);
+      
+      const removed = prev.find(i => i.id === itemId && i.quantity + delta <= 0);
+      if (removed) {
+        toast.info(`${removed.name} removed from cart`, {
+          style: {
+            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+          },
+        });
+      }
+      
+      return updated;
+    });
   };
 
   // Confirm order handler
   const confirmOrder = () => {
-    alert('Order passed and confirmed!');
+    toast.success('Order confirmed!', {
+      description: `Total: $${total}`,
+      style: {
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        color: 'white',
+        border: 'none',
+        borderRadius: '12px',
+      },
+    });
+    setCart([]);
   };
 
   const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0).toFixed(2);
+  const cartItemCount = cart.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Parent Tabs */}
-      <div className="fixed top-0 left-0 w-full flex justify-around bg-white shadow z-10">
-        <button
-          onClick={() => setActiveTab('menu')}
-          className={`w-1/2 py-3 text-center ${activeTab === 'menu' ? 'font-bold border-b-4 border-blue-500' : 'text-gray-500'}`}
-        >
-          Menu
-        </button>
-        <button
-          onClick={() => setActiveTab('order')}
-          className={`w-1/2 py-3 text-center ${activeTab === 'order' ? 'font-bold border-b-4 border-blue-500' : 'text-gray-500'}`}
-        >
-          My Order
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Main Tabs - Fixed at Top */}
+      <div className="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 z-50">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab('menu')}
+            className={`w-1/2 py-4 text-center font-semibold text-base transition-all duration-300 ${
+              activeTab === 'menu' 
+                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' 
+                : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50/50'
+            }`}
+          >
+            Menu
+          </button>
+          <button
+            onClick={() => setActiveTab('order')}
+            className={`w-1/2 py-4 text-center font-semibold text-base transition-all duration-300 ${
+              activeTab === 'order' 
+                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' 
+                : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50/50'
+            }`}
+          >
+            My Order
+          </button>
+        </div>
       </div>
 
-      {/* Sub-Menu Tabs */}
+      {/* Category Tabs - Only for Menu */}
       {activeTab === 'menu' && (
-        <div className="fixed top-12 w-full flex justify-around bg-white shadow z-10">
-          {(['starters', 'meals', 'desserts'] as MenuItem['category'][]).map(cat => (
-            <button
-              key={cat}
-              onClick={() => setMenuCategory(cat)}
-              className={`w-1/3 py-2 text-center capitalize ${menuCategory === cat ? 'font-semibold border-b-2 border-blue-600' : 'text-gray-400'}`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="fixed top-16 left-0 w-full bg-white/90 backdrop-blur-sm border-b border-slate-200 z-40">
+          <div className="flex justify-center px-4 py-3">
+            {(['starters', 'meals', 'desserts'] as MenuItem['category'][]).map(cat => (
+              <button
+                key={cat}
+                onClick={() => setMenuCategory(cat)}
+                className={`px-6 py-2 mx-1 text-center font-medium text-sm rounded-full transition-all duration-300 ${
+                  menuCategory === cat 
+                    ? `bg-gradient-to-r ${categoryColors[cat].gradient} text-white shadow-lg` 
+                    : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
+                }`}
+              >
+                <span className="capitalize">{cat}</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Content */}
-      <div className="pt-28 p-4 flex-1">
+      <div className="pt-32 px-4 pb-24">
         {activeTab === 'menu' && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {categorizedMenu[menuCategory].map(item => (
-              <div key={item.id} className="bg-white p-4 rounded shadow flex flex-col gap-2">
-                <div>
-                  <h2 className="font-medium text-lg">{item.name}</h2>
-                  <p className="text-sm text-gray-500">{item.description}</p>
-                  <p className="text-sm font-semibold">${item.price}</p>
+              <div 
+                key={item.id} 
+                className="bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.01]"
+              >
+                <div className="p-4">
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold text-slate-900 mb-1">{item.name}</h2>
+                      <p className="text-sm text-slate-600 mb-2 leading-relaxed">{item.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-lg font-bold bg-gradient-to-r ${categoryColors[menuCategory].price} bg-clip-text text-transparent`}>
+                          ${item.price.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => addToCart(item)}
+                      className={`flex-shrink-0 bg-gradient-to-r ${categoryColors[menuCategory].button} text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 shadow-md`}
+                    >
+                      Add
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => addToCart(item)}
-                  className="self-end bg-blue-600 text-white px-4 py-2 rounded transition-all duration-150 active:bg-blue-700 active:scale-95"
-                >
-                  Add
-                </button>
               </div>
             ))}
           </div>
         )}
 
         {activeTab === 'order' && (
-          <div className="flex flex-col justify-between h-full pb-32 space-y-6">
-            {(['starters', 'meals', 'desserts'] as MenuItem['category'][]).map(cat => {
-              const itemsInCat = cart.filter(i => i.category === cat);
-              if (!itemsInCat.length) return null;
-              return (
-                <div key={cat} className="space-y-2">
-                  <h3 className="text-md font-semibold capitalize text-gray-700">{cat}</h3>
-                  {itemsInCat.map(item => (
-                    <div key={item.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
-                      <div>
-                        <h2 className="font-medium">{item.name}</h2>
-                        <p className="text-sm text-gray-500">{item.quantity} × ${item.price} = ${(item.quantity * item.price).toFixed(2)}</p>
+          <div className="space-y-4">
+            {cart.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-lg border border-slate-100 p-8 text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-2">Your cart is empty</h2>
+                <p className="text-slate-600">Add some delicious items from the menu</p>
+              </div>
+            ) : (
+              <>
+                {(['starters', 'meals', 'desserts'] as MenuItem['category'][]).map(cat => {
+                  const itemsInCat = cart.filter(i => i.category === cat);
+                  if (!itemsInCat.length) return null;
+                  return (
+                    <div key={cat} className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-slate-900 capitalize">{cat}</h3>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => changeQuantity(item.id, -1)} className="bg-red-500 text-white px-2 py-1 rounded">−</button>
-                        <span className="text-sm font-medium">{item.quantity}</span>
-                        <button onClick={() => changeQuantity(item.id, 1)} className="bg-green-500 text-white px-2 py-1 rounded">+</button>
+                      <div className="space-y-2">
+                        {itemsInCat.map(item => (
+                          <div key={item.id} className="bg-white rounded-lg shadow-sm border border-slate-100 p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-slate-900 mb-1">{item.name}</h4>
+                                <div className="flex items-center gap-2 text-sm text-slate-600">
+                                  <span>${item.price.toFixed(2)} each</span>
+                                  <span>•</span>
+                                  <span className="font-semibold text-blue-600">${(item.quantity * item.price).toFixed(2)} total</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button 
+                                  onClick={() => changeQuantity(item.id, -1)} 
+                                  className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 hover:scale-110 active:scale-95 shadow-sm"
+                                >
+                                  -
+                                </button>
+                                <span className="text-sm font-bold text-slate-900 w-6 text-center">{item.quantity}</span>
+                                <button 
+                                  onClick={() => changeQuantity(item.id, 1)} 
+                                  className="w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 hover:scale-110 active:scale-95 shadow-sm"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
-            {cart.length > 0 && (
-              <div className="fixed bottom-0 left-0 w-full bg-white shadow-inner px-4 py-3 border-t">
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span>${total}</span>
-                </div>
-                <button
-                  onClick={confirmOrder}
-                  className="mt-2 w-full bg-green-600 text-white py-2 rounded"
-                >
-                  Pass & confirm order
-                </button>
-              </div>
+                  );
+                })}
+              </>
             )}
           </div>
         )}
       </div>
+
+      {/* Fixed Bottom Order Summary */}
+      {activeTab === 'order' && cart.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm">
+              <span className="font-medium">{cartItemCount}</span> item{cartItemCount !== 1 ? 's' : ''}
+            </div>
+            <div className="text-lg font-bold">
+              ${total}
+            </div>
+          </div>
+          <button
+            onClick={confirmOrder}
+            className="w-full bg-white text-blue-600 py-2 rounded-lg font-semibold text-base hover:bg-gray-50 transition-all duration-300 hover:scale-[1.01] active:scale-98 shadow-md"
+          >
+            Confirm Order
+          </button>
+        </div>
+      )}
     </div>
   );
 }
