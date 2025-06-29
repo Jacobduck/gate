@@ -57,19 +57,19 @@ const categorizedMenu: Record<MenuItem['category'], MenuItem[]> = {
 
 const categoryColors = {
   starters: {
-    gradient: 'from-orange-400 to-red-500',
+    tab: 'bg-orange-500',
     toast: 'linear-gradient(135deg, #fb923c 0%, #ef4444 100%)',
     price: 'from-orange-400 to-red-500',
     button: 'from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600'
   },
   meals: {
-    gradient: 'from-blue-500 to-purple-600',
+    tab: 'bg-blue-600',
     toast: 'linear-gradient(135deg, #3b82f6 0%, #9333ea 100%)',
     price: 'from-blue-500 to-purple-600',
     button: 'from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
   },
   desserts: {
-    gradient: 'from-pink-400 to-rose-500',
+    tab: 'bg-pink-500',
     toast: 'linear-gradient(135deg, #f472b6 0%, #f43f5e 100%)',
     price: 'from-pink-400 to-rose-500',
     button: 'from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600'
@@ -181,9 +181,9 @@ export default function HomePage() {
               <button
                 key={cat}
                 onClick={() => setMenuCategory(cat)}
-                className={`px-6 py-2 mx-1 text-center font-medium text-sm rounded-full transition-all duration-300 ${
+                className={`px-6 py-2 mx-1 text-center font-medium text-sm rounded-full transition-all duration-200 ${
                   menuCategory === cat 
-                    ? `bg-gradient-to-r ${categoryColors[cat].gradient} text-white shadow-lg` 
+                    ? `${categoryColors[cat].tab} text-white shadow-lg` 
                     : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
                 }`}
               >
